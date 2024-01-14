@@ -1,0 +1,68 @@
+import streamlit as st
+import pickle
+import numpy as np
+
+# import the model
+pipe = pickle.load(open('pipe.pkl', 'rb'))
+df = pickle.load(open('df.pkl', 'rb'))
+
+st.title("Laptop Predictor")
+
+# brand
+Brand = st.selectbox('Brand', df['Brand'].unique())
+
+# type of laptop
+Type = st.selectbox('Type', df['Type'].unique())
+
+# Ram
+Ram = st.selectbox('RAM(in GB)', [2, 4, 6, 8, 12, 16, 24, 32, 64])
+
+# Operating System
+OpSys = st.selectbox('Operating System', df['OpSys'].unique())
+
+# weight
+Weight = st.number_input('Weight of the Laptop')
+
+# Touchscreen
+Touch_ScreenYes = st.selectbox('Touch_ScreenYes', ['No', 'Yes'])
+
+# IPS
+IPS = st.selectbox('IPS', ['No', 'Yes'])
+
+# screen size
+Inch = st.number_input('Screen Size')
+
+# resolution
+sc_res1 = st.selectbox('Screen Resolution',
+                       ['1920x1080', '1366x768', '1600x900', '3840x2160', '3200x1800', '2880x1800', '2560x1600',
+                        '2560x1440', '2304x1440'])
+
+# cpu
+Cpu_Name = st.selectbox('CPU', df['Cpu_Name'].unique())
+
+Cpu_brand = st.selectbox('GPU', df['Cpu_brand'].unique())
+
+SSD = st.selectbox('SSD(in GB)', [0, 8, 128, 256, 512, 1024])
+
+HDD = st.selectbox('HDD(in GB)', [0, 128, 256, 512, 1024, 2048])
+
+if st.button('Predict Price'):
+    # query
+    ppi = None
+    if Touch_ScreenYes == 'Yes':
+        Touch_ScreenYes = 1
+    else:
+        Touch_ScreenYes = 0
+
+    if IPS == 'Yes':
+        IPS = 1
+    else:
+        IPS = 0
+
+    X_res = int(sc_res1.split('x')[0])
+    Y_res = int(sc_res1.split('x')[1])
+    ppi = ((X_res ** 2) + (Y_res ** 2)) ** 0.5 / Inch
+    query = np.array([Brand, Type, Ram, OpSys, Weight, Touch_ScreenYes, IPS, Inch, ppi, Cpu_Name, Cpu_brand, SSD, HDD])
+
+    query = query.reshape(1, 12)
+    st.title("The predicted price of this configuration is " + str(int(np.exp(pipe.predict(query)[0]))))
